@@ -55,7 +55,8 @@ class BurstIconButton extends StatefulWidget {
     this.burstDistance,
     this.burstCount,
     this.burstCurve,
-  });
+    this.maxConcurrentBursts,
+  }) : assert(maxConcurrentBursts == null || maxConcurrentBursts > 0);
 
   /// The default icon displayed in the button.
   final Icon icon;
@@ -105,6 +106,12 @@ class BurstIconButton extends StatefulWidget {
   /// Defaults to [Curves.easeOut].
   final Curve? burstCurve;
 
+  /// The maximum number of burst icons that can be animating at the same time.
+  ///
+  /// When set, new burst icons will not be spawned if the current number of
+  /// active burst icons has reached this limit. Defaults to null (no limit).
+  final int? maxConcurrentBursts;
+
   @override
   State<BurstIconButton> createState() => _BurstIconButtonState();
 }
@@ -114,13 +121,6 @@ class _BurstIconButtonState extends State<BurstIconButton>
   Timer? _timer;
   bool _isPressed = false;
   final List<_IconData> _icons = [];
-  double? _iconSizeFactor;
-
-  double get iconSizeFactor {
-    return _iconSizeFactor ??=
-        (widget.icon.size ?? Theme.of(context).iconTheme.size ?? 24.0) /
-            (Theme.of(context).iconTheme.size ?? 24.0);
-  }
 
   @override
   void dispose() {
@@ -147,7 +147,7 @@ class _BurstIconButtonState extends State<BurstIconButton>
               return Transform.translate(
                 offset: Offset(
                   icon.amplitude * sin(icon.animation.value * pi * icon.shake),
-                  -distance * icon.animation.value * iconSizeFactor,
+                  -distance * icon.animation.value,
                 ),
                 child: FadeTransition(
                   opacity: icon.fadeAnimation,
@@ -212,9 +212,14 @@ class _BurstIconButtonState extends State<BurstIconButton>
 
   void _spawnBurst() {
     final count = widget.burstCount ?? 1;
+    final maxBursts = widget.maxConcurrentBursts;
+    var spawned = false;
     for (var i = 0; i < count; i++) {
+      if (maxBursts != null && _icons.length >= maxBursts) break;
       _createIcon();
+      spawned = true;
     }
+    if (spawned) setState(() {});
   }
 
   void _createIcon() {
@@ -245,10 +250,9 @@ class _BurstIconButtonState extends State<BurstIconButton>
         } else {
           _icons.remove(icon);
         }
+        animation.dispose();
         controller.dispose();
       }
     });
-
-    setState(() {});
   }
 }

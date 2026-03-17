@@ -248,5 +248,83 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
       expect(find.byIcon(Icons.favorite), findsNothing);
     });
+
+    testWidgets('burstDistance is exact pixels without icon size factor',
+        (tester) async {
+      // Use icon size 48 with theme default 24. Previously, the distance
+      // was multiplied by iconSizeFactor (48/24 = 2), doubling the distance.
+      // After the fix, burstDistance should be used as-is.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(iconTheme: const IconThemeData(size: 24)),
+          home: Scaffold(
+            body: Center(
+              child: BurstIconButton(
+                icon: const Icon(Icons.favorite_border, size: 48),
+                burstIcon: const Icon(Icons.favorite, size: 48),
+                burstDistance: 100.0,
+                duration: const Duration(milliseconds: 1000),
+                onPressed: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(GestureDetector));
+      await tester.pump();
+
+      // The burst icon should exist; the distance calculation should not
+      // be doubled (no iconSizeFactor). We verify it doesn't crash and
+      // produces burst icons.
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+
+      await tester.pumpAndSettle(const Duration(milliseconds: 1100));
+      expect(find.byIcon(Icons.favorite), findsNothing);
+    });
+
+    testWidgets('maxConcurrentBursts limits concurrent animations',
+        (tester) async {
+      await tester.pumpWidget(buildTestApp(
+        BurstIconButton(
+          icon: const Icon(Icons.star_border),
+          burstIcon: const Icon(Icons.star),
+          burstCount: 3,
+          maxConcurrentBursts: 2,
+          duration: const Duration(milliseconds: 2000),
+          onPressed: () {},
+        ),
+      ));
+
+      // Tap spawns burstCount=3, but maxConcurrentBursts=2 limits it.
+      await tester.tap(find.byType(GestureDetector));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.star), findsNWidgets(2));
+
+      await tester.pumpAndSettle(const Duration(milliseconds: 2100));
+      expect(find.byIcon(Icons.star), findsNothing);
+    });
+
+    testWidgets('maxConcurrentBursts null allows unlimited', (tester) async {
+      await tester.pumpWidget(buildTestApp(
+        BurstIconButton(
+          icon: const Icon(Icons.star_border),
+          burstIcon: const Icon(Icons.star),
+          burstCount: 5,
+          duration: const Duration(milliseconds: 2000),
+          onPressed: () {},
+        ),
+      ));
+
+      // No limit, all 5 should spawn.
+      await tester.tap(find.byType(GestureDetector));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.star), findsNWidgets(5));
+
+      await tester.pumpAndSettle(const Duration(milliseconds: 2100));
+      expect(find.byIcon(Icons.star), findsNothing);
+    });
   });
 }

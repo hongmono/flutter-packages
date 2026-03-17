@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:flutter/material.dart';
 
 /// The alignment position for initial placement of the floating widget.
@@ -31,6 +33,58 @@ enum FloatingAlignment {
 
   /// Bottom-right corner of the available area.
   bottomRight,
+}
+
+/// The direction(s) in which the floating widget should snap when released.
+enum SnapDirection {
+  /// Snap to the nearest horizontal (left/right) edge only.
+  horizontal,
+
+  /// Snap to the nearest vertical (top/bottom) edge only.
+  vertical,
+
+  /// Snap to the nearest edge in both axes.
+  both,
+
+  /// Do not snap to any edge.
+  none,
+}
+
+/// A controller for programmatically moving a [FloatingWidget].
+///
+/// Attach to a [FloatingWidget] via the [FloatingWidget.controller] parameter.
+/// Use [setPosition] to move the widget and [currentPosition] to read its
+/// current offset.
+class FloatingWidgetController {
+  _FloatingWidgetState? _state;
+
+  void _attach(_FloatingWidgetState state) => _state = state;
+  void _detach() => _state = null;
+
+  /// The current position of the floating widget.
+  ///
+  /// Returns [Offset.zero] if the controller is not attached.
+  Offset get currentPosition => _state?._position ?? Offset.zero;
+
+  /// Moves the floating widget to [position].
+  ///
+  /// The position is clamped to the valid bounds. When [animate] is `true`
+  /// (the default), the widget smoothly animates to the new position.
+  void setPosition(Offset position, {bool animate = true}) {
+    final state = _state;
+    if (state == null || !state.mounted) return;
+    // clamp position to bounds
+    state._measureFloatingWidget();
+    final size = state._floatingWidgetSize;
+    if (size == null) return;
+    final screenSize = MediaQuery.of(state.context).size;
+    final clamped = state._clampPosition(position, screenSize, size);
+    if (animate) {
+      state._animateTo(clamped);
+    } else {
+      state._setPositionImmediate(clamped);
+    }
+  }
 }
 
 /// A widget that wraps its [child] and overlays a draggable [floatingWidget]
@@ -85,6 +139,8 @@ class FloatingWidget extends StatefulWidget {
     this.snapAnimationDuration = const Duration(milliseconds: 300),
     this.snapAnimationCurve = Curves.easeOut,
     this.onPositionChanged,
+    this.snapDirection,
+    this.controller,
     required this.child,
   });
 
@@ -134,6 +190,21 @@ class FloatingWidget extends StatefulWidget {
   /// The callback receives the new [Offset] after clamping and snapping.
   final ValueChanged<Offset>? onPositionChanged;
 
+  /// The direction(s) in which the floating widget should snap when released.
+  ///
+  /// When set, this overrides the [snapToEdge] flag:
+  /// - [SnapDirection.horizontal]: snaps to the nearest left/right edge.
+  /// - [SnapDirection.vertical]: snaps to the nearest top/bottom edge.
+  /// - [SnapDirection.both]: snaps to the nearest edge on both axes.
+  /// - [SnapDirection.none]: disables snapping even if [snapToEdge] is `true`.
+  ///
+  /// When null, the snap behavior is determined by [snapToEdge]
+  /// (horizontal snap when `true`, no snap when `false`).
+  final SnapDirection? snapDirection;
+
+  /// An optional controller for programmatically moving the floating widget.
+  final FloatingWidgetController? controller;
+
   @override
   State<FloatingWidget> createState() => _FloatingWidgetState();
 }
@@ -146,8 +217,14 @@ class _FloatingWidgetState extends State<FloatingWidget>
   final GlobalKey _stackKey = GlobalKey();
 
   late final AnimationController _animationController;
+  CurvedAnimation? _curvedAnimation;
   Animation<Offset>? _animation;
   bool _initialAlignmentApplied = false;
+
+  SnapDirection get _effectiveSnapDirection {
+    if (widget.snapDirection != null) return widget.snapDirection!;
+    return widget.snapToEdge ? SnapDirection.horizontal : SnapDirection.none;
+  }
 
   @override
   void initState() {
@@ -158,6 +235,7 @@ class _FloatingWidgetState extends State<FloatingWidget>
       duration: widget.snapAnimationDuration,
     );
     _animationController.addListener(_onAnimationTick);
+    widget.controller?._attach(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureFloatingWidget();
@@ -166,7 +244,18 @@ class _FloatingWidgetState extends State<FloatingWidget>
   }
 
   @override
+  void didUpdateWidget(covariant FloatingWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach();
+      widget.controller?._attach(this);
+    }
+  }
+
+  @override
   void dispose() {
+    widget.controller?._detach();
+    _curvedAnimation?.dispose();
     _animationController.removeListener(_onAnimationTick);
     _animationController.dispose();
     super.dispose();
@@ -214,9 +303,10 @@ class _FloatingWidgetState extends State<FloatingWidget>
   ) {
     final left = widget.padding.left;
     final top = widget.padding.top;
-    final right = screenSize.width - widgetSize.width - widget.padding.right;
+    final right =
+        max(left, screenSize.width - widgetSize.width - widget.padding.right);
     final bottom =
-        screenSize.height - widgetSize.height - widget.padding.bottom;
+        max(top, screenSize.height - widgetSize.height - widget.padding.bottom);
     final centerX = (left + right) / 2;
     final centerY = (top + bottom) / 2;
 
@@ -243,9 +333,11 @@ class _FloatingWidgetState extends State<FloatingWidget>
           top: _position.dy,
           left: _position.dx,
           child: GestureDetector(
-            onPanUpdate: (details) {
+            onPanStart: (_) {
               _animationController.stop();
               _measureFloatingWidget();
+            },
+            onPanUpdate: (details) {
               setState(() {
                 _position = Offset(
                   _position.dx + details.delta.dx,
@@ -277,7 +369,7 @@ class _FloatingWidgetState extends State<FloatingWidget>
 
     final screenSize = MediaQuery.of(context).size;
     final target = _clampPosition(_position, screenSize, size);
-    final snapped = widget.snapToEdge
+    final snapped = _effectiveSnapDirection != SnapDirection.none
         ? _snapToNearestEdge(target, screenSize, size)
         : target;
 
@@ -287,8 +379,10 @@ class _FloatingWidgetState extends State<FloatingWidget>
   Offset _clampPosition(Offset position, Size screenSize, Size widgetSize) {
     final minX = widget.padding.left;
     final minY = widget.padding.top;
-    final maxX = screenSize.width - widgetSize.width - widget.padding.right;
-    final maxY = screenSize.height - widgetSize.height - widget.padding.bottom;
+    final maxX =
+        max(minX, screenSize.width - widgetSize.width - widget.padding.right);
+    final maxY = max(
+        minY, screenSize.height - widgetSize.height - widget.padding.bottom);
 
     return Offset(
       position.dx.clamp(minX, maxX),
@@ -298,11 +392,37 @@ class _FloatingWidgetState extends State<FloatingWidget>
 
   Offset _snapToNearestEdge(Offset position, Size screenSize, Size widgetSize) {
     final minX = widget.padding.left;
-    final maxX = screenSize.width - widgetSize.width - widget.padding.right;
-    final midX = (minX + maxX) / 2;
+    final maxX =
+        max(minX, screenSize.width - widgetSize.width - widget.padding.right);
+    final minY = widget.padding.top;
+    final maxY = max(
+        minY, screenSize.height - widgetSize.height - widget.padding.bottom);
 
-    final snappedX = position.dx < midX ? minX : maxX;
-    return Offset(snappedX, position.dy);
+    final direction = _effectiveSnapDirection;
+
+    double snappedX = position.dx;
+    double snappedY = position.dy;
+
+    if (direction == SnapDirection.horizontal ||
+        direction == SnapDirection.both) {
+      final midX = (minX + maxX) / 2;
+      snappedX = position.dx < midX ? minX : maxX;
+    }
+
+    if (direction == SnapDirection.vertical ||
+        direction == SnapDirection.both) {
+      final midY = (minY + maxY) / 2;
+      snappedY = position.dy < midY ? minY : maxY;
+    }
+
+    return Offset(snappedX, snappedY);
+  }
+
+  void _setPositionImmediate(Offset position) {
+    setState(() {
+      _position = position;
+    });
+    widget.onPositionChanged?.call(position);
   }
 
   void _animateTo(Offset target) {
@@ -311,13 +431,15 @@ class _FloatingWidgetState extends State<FloatingWidget>
       return;
     }
 
+    _curvedAnimation?.dispose();
+    _curvedAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: widget.snapAnimationCurve,
+    );
     _animation = Tween<Offset>(
       begin: _position,
       end: target,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: widget.snapAnimationCurve,
-    ));
+    ).animate(_curvedAnimation!);
 
     _animationController.duration = widget.snapAnimationDuration;
     _animationController.forward(from: 0).then((_) {

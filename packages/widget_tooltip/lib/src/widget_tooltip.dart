@@ -46,7 +46,10 @@ class WidgetTooltip extends StatefulWidget {
     this.autoFlip = true,
     this.dismissOnScroll = true,
     this.semanticLabel,
-  });
+    this.showDelay,
+    this.hideDelay,
+    this.messageMaxWidth,
+  }) : assert(messageMaxWidth == null || messageMaxWidth > 0);
 
   final Widget message;
   final Widget child;
@@ -83,6 +86,28 @@ class WidgetTooltip extends StatefulWidget {
   /// making the tooltip accessible to screen readers.
   final String? semanticLabel;
 
+  /// The delay before showing the tooltip after a trigger event.
+  ///
+  /// When set, the tooltip will wait for this duration before appearing.
+  /// If the tooltip is dismissed before the delay completes, the pending
+  /// show is cancelled. Defaults to null (no delay).
+  final Duration? showDelay;
+
+  /// The delay before hiding the tooltip after a dismiss event.
+  ///
+  /// When set, the tooltip will wait for this duration before disappearing.
+  /// If the tooltip is shown again before the delay completes, the pending
+  /// hide is cancelled. Defaults to null (no delay).
+  final Duration? hideDelay;
+
+  /// The maximum width of the tooltip message box.
+  ///
+  /// When set, the tooltip message will be constrained to this width.
+  /// If this value exceeds the available screen width (minus padding),
+  /// the screen width constraint takes precedence. Defaults to null
+  /// (uses screen width minus padding).
+  final double? messageMaxWidth;
+
   @override
   State<WidgetTooltip> createState() => _WidgetTooltipState();
 }
@@ -95,6 +120,8 @@ class _WidgetTooltipState extends State<WidgetTooltip>
   WidgetTooltipTriggerMode? _triggerMode;
   WidgetTooltipDismissMode? _dismissMode;
   Timer? _autoDismissTimer;
+  Timer? _showDelayTimer;
+  Timer? _hideDelayTimer;
 
   final _targetKey = GlobalKey();
   final _messageBoxKey = GlobalKey();
@@ -148,6 +175,8 @@ class _WidgetTooltipState extends State<WidgetTooltip>
   @override
   void dispose() {
     _cancelAutoDismissTimer();
+    _showDelayTimer?.cancel();
+    _hideDelayTimer?.cancel();
     _removeOverlay();
     _removeScrollListener();
     _controller.removeListener(_listener);
@@ -171,9 +200,31 @@ class _WidgetTooltipState extends State<WidgetTooltip>
 
   void _listener() {
     if (_controller.isShow) {
-      _show();
+      _hideDelayTimer?.cancel();
+      _hideDelayTimer = null;
+      final showDelay = widget.showDelay;
+      if (showDelay != null) {
+        _showDelayTimer?.cancel();
+        _showDelayTimer = Timer(showDelay, () {
+          _showDelayTimer = null;
+          _show();
+        });
+      } else {
+        _show();
+      }
     } else {
-      _dismiss();
+      _showDelayTimer?.cancel();
+      _showDelayTimer = null;
+      final hideDelay = widget.hideDelay;
+      if (hideDelay != null) {
+        _hideDelayTimer?.cancel();
+        _hideDelayTimer = Timer(hideDelay, () {
+          _hideDelayTimer = null;
+          _dismiss();
+        });
+      } else {
+        _dismiss();
+      }
     }
   }
 
@@ -256,11 +307,17 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     final resolvedPadding = widget.padding.resolve(Directionality.of(context));
     final horizontalPadding = resolvedPadding.left + resolvedPadding.right;
 
+    final screenMaxWidth =
+        MediaQuery.of(context).size.width - horizontalPadding;
+    final effectiveMaxWidth = widget.messageMaxWidth != null
+        ? min(widget.messageMaxWidth!, screenMaxWidth)
+        : screenMaxWidth;
+
     final Widget messageBox = Material(
       type: MaterialType.transparency,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width - horizontalPadding,
+          maxWidth: effectiveMaxWidth,
         ),
         child: Container(
           key: _messageBoxKey,
@@ -636,9 +693,13 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     double dx = 0;
     if (edgeFromHorizontal < widget.padding.horizontal / 2) {
       if (isLeft) {
-        dx = (widget.padding.horizontal / 2) - edgeFromHorizontal;
+        dx = safePadding.left +
+            (widget.padding.horizontal / 2) -
+            edgeFromHorizontal;
       } else if (isRight) {
-        dx = -(widget.padding.horizontal / 2) + edgeFromHorizontal;
+        dx = -safePadding.right -
+            (widget.padding.horizontal / 2) +
+            edgeFromHorizontal;
       }
     }
 

@@ -1437,6 +1437,225 @@ void main() {
       });
     });
 
+    group('ShowDelay / HideDelay', () {
+      testWidgets('showDelay delays tooltip appearance',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Delayed tooltip'),
+                  controller: controller,
+                  showDelay: const Duration(milliseconds: 300),
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pump();
+        // Not yet visible
+        expect(find.text('Delayed tooltip'), findsNothing);
+
+        // Still not visible after partial delay
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(find.text('Delayed tooltip'), findsNothing);
+
+        // Visible after full delay
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pumpAndSettle();
+        expect(find.text('Delayed tooltip'), findsOneWidget);
+      });
+
+      testWidgets('hideDelay delays tooltip dismissal',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Delayed hide'),
+                  controller: controller,
+                  hideDelay: const Duration(milliseconds: 300),
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+        expect(find.text('Delayed hide'), findsOneWidget);
+
+        controller.dismiss();
+        await tester.pump();
+        // Still visible during delay
+        expect(find.text('Delayed hide'), findsOneWidget);
+
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(find.text('Delayed hide'), findsOneWidget);
+
+        // Dismissed after full delay
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pumpAndSettle();
+        expect(find.text('Delayed hide'), findsNothing);
+      });
+
+      testWidgets('dismiss cancels pending show delay',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Cancelled tooltip'),
+                  controller: controller,
+                  showDelay: const Duration(milliseconds: 300),
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pump(const Duration(milliseconds: 100));
+        // Cancel before delay completes
+        controller.dismiss();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+
+        // Should never appear
+        expect(find.text('Cancelled tooltip'), findsNothing);
+      });
+
+      testWidgets('show cancels pending hide delay',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Kept tooltip'),
+                  controller: controller,
+                  hideDelay: const Duration(milliseconds: 300),
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+        expect(find.text('Kept tooltip'), findsOneWidget);
+
+        // Start dismiss
+        controller.dismiss();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // Re-show before hide delay completes
+        controller.show();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+
+        // Should still be visible
+        expect(find.text('Kept tooltip'), findsOneWidget);
+      });
+    });
+
+    group('messageMaxWidth', () {
+      testWidgets('messageMaxWidth constrains width',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text(
+                    'A very long tooltip message that would normally span the full width of the screen',
+                  ),
+                  controller: controller,
+                  messageMaxWidth: 200,
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        // Find the ConstrainedBox used for the message
+        final constrainedBoxes = tester.widgetList<ConstrainedBox>(
+          find.byType(ConstrainedBox),
+        );
+        final tooltipConstrainedBox = constrainedBoxes.where(
+          (cb) => cb.constraints.maxWidth <= 200,
+        );
+        expect(tooltipConstrainedBox, isNotEmpty);
+      });
+
+      testWidgets('messageMaxWidth capped by screen width',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip'),
+                  controller: controller,
+                  messageMaxWidth: 10000,
+                  animation: WidgetTooltipAnimation.none,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        // The effective max width should be the screen width minus padding,
+        // not 10000. Find ConstrainedBoxes with finite maxWidth.
+        final constrainedBoxes = tester.widgetList<ConstrainedBox>(
+          find.byType(ConstrainedBox),
+        );
+        final finiteBoxes = constrainedBoxes
+            .where((cb) => cb.constraints.maxWidth.isFinite)
+            .toList();
+        expect(finiteBoxes, isNotEmpty);
+        for (final cb in finiteBoxes) {
+          // Screen width is 800 in tests, minus default padding (32),
+          // so max should be well under 10000.
+          expect(cb.constraints.maxWidth, lessThan(10000));
+        }
+      });
+    });
+
     group('DismissOnScroll', () {
       testWidgets('tooltip dismisses when scrollable scrolls',
           (WidgetTester tester) async {
