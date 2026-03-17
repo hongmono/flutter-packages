@@ -1,3 +1,13 @@
+## 0.1.1
+
+### Bug Fixes
+* **LICENSE**: Add proper MIT license (was placeholder)
+* **Library directive**: Change `library floating_widget;` to `library;` to fix dangling doc comment warning
+
+### Improvements
+* Fix LICENSE copyright holder
+* Apply `dart format` to all files
+
 ## 0.1.0
 
 ### Features

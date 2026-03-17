@@ -1,3 +1,15 @@
+## 1.3.1
+
+### Bug Fixes
+* **Semantics hint**: Fix tap trigger mode incorrectly showing "Double tap to show tooltip" instead of "Tap to show tooltip"
+* **TooltipGroup**: Fix potential concurrent modification in `dismissAll()` and `_dismissOthers()` by iterating over a defensive copy
+* **Triangle painter**: Remove dead `strokeWidth` and `strokeCap` properties that had no effect with `PaintingStyle.fill`
+
+### Improvements
+* Add deprecation ignore comment for `SemanticsService.announce` with migration note for Flutter 3.35+
+* Fix LICENSE copyright holder
+* Apply `dart format` to all files
+
 ## 1.3.0
 
 ### Features

@@ -1,3 +1,18 @@
+## 0.2.1
+
+### Bug Fixes
+* **Type safety**: Add explicit type annotations to gesture callbacks (`TapDownDetails`, `TapUpDetails`, `LongPressStartDetails`, `LongPressEndDetails`)
+* **Library directive**: Remove unnecessary `library burst_button;` directive that mismatched package name
+
+### Performance
+* **Tween hot-path**: Pre-compute `fadeAnimation` at icon creation instead of re-creating `Tween` on every animation frame
+* **Random instance**: Use single module-level `Random` instance instead of creating one per burst icon
+
+### Improvements
+* Remove unused `GlobalKey` field from `_IconData`
+* Fix LICENSE copyright holder
+* Apply `dart format` to all files
+
 ## 0.2.0
 
 ### Features
