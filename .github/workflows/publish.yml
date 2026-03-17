@@ -20,8 +20,28 @@ jobs:
           PACKAGE="${TAG%%-v*}"
           echo "package=$PACKAGE" >> "$GITHUB_OUTPUT"
 
-  publish:
+  verify:
     needs: determine-package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.4'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: dart analyze .
+
+      - name: Test
+        run: cd packages/${{ needs.determine-package.outputs.package }} && flutter test
+
+  publish:
+    needs: [determine-package, verify]
     permissions:
       id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
