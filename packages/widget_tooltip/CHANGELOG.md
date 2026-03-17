@@ -1,3 +1,8 @@
+## 1.3.2
+
+### Improvements
+* Add Live Demo link to README
+
 ## 1.3.1
 
 ### Bug Fixes

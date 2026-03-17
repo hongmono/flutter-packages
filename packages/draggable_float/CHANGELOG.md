@@ -1,3 +1,8 @@
+## 0.1.2
+
+### Improvements
+* Add Live Demo link and pub.dev badge to README
+
 ## 0.1.1
 
 ### Bug Fixes
