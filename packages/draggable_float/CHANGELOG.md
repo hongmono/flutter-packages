@@ -1,3 +1,8 @@
+## 0.1.3
+
+### Improvements
+* Enable GitHub Actions automated publishing
+
 ## 0.1.2
 
 ### Improvements
