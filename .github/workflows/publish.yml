@@ -5,7 +5,7 @@ on:
     tags:
     - 'widget_tooltip-v*'
     - 'burst_icon_button-v*'
-    - 'floating_widget-v*'
+    - 'draggable_float-v*'
 
 jobs:
   determine-package:

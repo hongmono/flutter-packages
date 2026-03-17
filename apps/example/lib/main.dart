@@ -53,7 +53,7 @@ class HomePage extends StatelessWidget {
       version: '0.2.0',
     ),
     _PackageInfo(
-      name: 'floating_widget',
+      name: 'draggable_float',
       description: 'A draggable floating widget with boundary constraints',
       route: '/floating_widget',
       icon: Icons.drag_indicator,

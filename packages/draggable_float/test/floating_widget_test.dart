@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:floating_widget/floating_widget.dart';
+import 'package:draggable_float/draggable_float.dart';
 
 Widget buildApp({
   Offset initialPosition = Offset.zero,

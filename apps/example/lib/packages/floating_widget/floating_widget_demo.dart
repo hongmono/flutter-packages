@@ -1,4 +1,4 @@
-import 'package:floating_widget/floating_widget.dart';
+import 'package:draggable_float/draggable_float.dart';
 import 'package:flutter/material.dart';
 
 class FloatingWidgetDemo extends StatefulWidget {

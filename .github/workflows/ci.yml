@@ -29,5 +29,5 @@ jobs:
       - name: Test burst_icon_button
         run: cd packages/burst_icon_button && flutter test
 
-      - name: Test floating_widget
-        run: cd packages/floating_widget && flutter test
+      - name: Test draggable_float
+        run: cd packages/draggable_float && flutter test

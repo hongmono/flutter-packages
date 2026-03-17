@@ -1,4 +1,4 @@
-# FloatingWidget
+# DraggableFloat
 
 A draggable floating widget for Flutter that can be repositioned anywhere on screen with boundary constraints, snap-to-edge behavior, and smooth animations.
 
@@ -17,8 +17,8 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  floating_widget:
-    path: packages/floating_widget  # or your preferred source
+  draggable_float:
+    path: packages/draggable_float  # or your preferred source
 ```
 
 ## Usage

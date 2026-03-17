@@ -26,7 +26,7 @@ dart format .
 # Run tests for a specific package
 cd packages/widget_tooltip && flutter test
 cd packages/burst_icon_button && flutter test
-cd packages/floating_widget && flutter test
+cd packages/draggable_float && flutter test
 
 # Run a single test file
 flutter test test/widget_tooltip_test.dart
@@ -43,7 +43,7 @@ These commands are also available as Melos scripts (`analyze`, `test`, `format`)
 packages/
   widget_tooltip/      # Customizable tooltip widget (pub.dev published)
   burst_icon_button/   # Icon button with burst animation (pub.dev published)
-  floating_widget/     # Draggable floating widget (pub.dev published)
+  draggable_float/     # Draggable floating widget (pub.dev published)
 apps/
   example/             # Demo app showcasing all packages
 ```
