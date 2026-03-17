@@ -2,6 +2,10 @@
 
 A draggable floating widget for Flutter that can be repositioned anywhere on screen with boundary constraints, snap-to-edge behavior, and smooth animations.
 
+[![pub package](https://img.shields.io/pub/v/draggable_float.svg)](https://pub.dev/packages/draggable_float)
+
+**[Live Demo](https://hongmono.github.io/flutter-packages/)**
+
 ## Features
 
 - 🖱️ **Draggable** — freely move any widget around the screen
