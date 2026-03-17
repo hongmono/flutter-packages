@@ -54,9 +54,7 @@ class _TooltipTrianglePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
       ..color = color
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round;
+      ..style = PaintingStyle.fill;
 
     final double a = size.width / 2;
     final double b = size.height;

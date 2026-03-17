@@ -65,8 +65,7 @@ void main() {
       expect(pressed, isTrue);
     });
 
-    testWidgets('tap creates a burst icon that animates away',
-        (tester) async {
+    testWidgets('tap creates a burst icon that animates away', (tester) async {
       await tester.pumpWidget(buildTestApp(
         BurstIconButton(
           icon: const Icon(Icons.favorite_border),

@@ -129,7 +129,8 @@ void main() {
         );
 
         // Create a mouse and hover over target
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture =
+            await tester.createGesture(kind: PointerDeviceKind.mouse);
         await gesture.addPointer(location: Offset.zero);
         addTearDown(gesture.removePointer);
 
@@ -696,8 +697,7 @@ void main() {
     });
 
     group('autoFlip behavior', () {
-      testWidgets(
-          'autoFlip false without direction defaults to showing below',
+      testWidgets('autoFlip false without direction defaults to showing below',
           (WidgetTester tester) async {
         final controller = TooltipController();
 
@@ -730,8 +730,7 @@ void main() {
         expect(find.text('Tooltip message'), findsOneWidget);
 
         // Verify the tooltip is positioned below the target
-        final targetBox =
-            tester.renderObject(find.text('Target')) as RenderBox;
+        final targetBox = tester.renderObject(find.text('Target')) as RenderBox;
         final targetPos = targetBox.localToGlobal(Offset.zero);
 
         final tooltipBox =
@@ -776,8 +775,7 @@ void main() {
         expect(find.text('Tooltip message'), findsOneWidget);
 
         // Verify the tooltip is positioned above the target
-        final targetBox =
-            tester.renderObject(find.text('Target')) as RenderBox;
+        final targetBox = tester.renderObject(find.text('Target')) as RenderBox;
         final targetPos = targetBox.localToGlobal(Offset.zero);
 
         final tooltipBox =
@@ -822,8 +820,7 @@ void main() {
         expect(find.text('Tooltip message'), findsOneWidget);
 
         // Verify the tooltip is positioned below the target (auto-flipped to bottom)
-        final targetBox =
-            tester.renderObject(find.text('Target')) as RenderBox;
+        final targetBox = tester.renderObject(find.text('Target')) as RenderBox;
         final targetPos = targetBox.localToGlobal(Offset.zero);
 
         final tooltipBox =
@@ -866,8 +863,7 @@ void main() {
         expect(find.text('Tooltip message'), findsOneWidget);
       });
 
-      testWidgets(
-          'direction top is respected in ListView items',
+      testWidgets('direction top is respected in ListView items',
           (WidgetTester tester) async {
         await tester.pumpWidget(
           MaterialApp(
@@ -1133,7 +1129,6 @@ void main() {
       });
     });
 
-
     group('Accessibility', () {
       testWidgets('child has Semantics with label when semanticLabel is set',
           (WidgetTester tester) async {
@@ -1155,14 +1150,12 @@ void main() {
         // Verify Semantics widget wraps the child with the label
         final semantics = find.byWidgetPredicate(
           (widget) =>
-              widget is Semantics &&
-              widget.properties.label == 'Help tooltip',
+              widget is Semantics && widget.properties.label == 'Help tooltip',
         );
         expect(semantics, findsOneWidget);
       });
 
-      testWidgets(
-          'child has long press hint when trigger mode is longPress',
+      testWidgets('child has long press hint when trigger mode is longPress',
           (WidgetTester tester) async {
         await tester.pumpWidget(
           const MaterialApp(

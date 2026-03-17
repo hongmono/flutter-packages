@@ -49,9 +49,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
       expect(positioned.left, 100);
       expect(positioned.top, 200);
     });
@@ -71,9 +73,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
       expect(positioned.left, closeTo(150, 2));
       expect(positioned.top, closeTo(130, 2));
     });
@@ -94,9 +98,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
       expect(positioned.left! >= 20, isTrue);
       expect(positioned.top! >= 20, isTrue);
     });
@@ -119,9 +125,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
 
       // Center of 800 is ~400, widget at ~310 should snap to left edge (16)
       // midpoint = (16 + 728) / 2 = 372, 310 < 372 => snaps left
@@ -154,9 +162,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
       expect(positioned.left, closeTo(10, 1));
       expect(positioned.top, closeTo(10, 1));
     });
@@ -189,9 +199,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final positioned = tester.widgetList<Positioned>(
-        find.byType(Positioned),
-      ).last;
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.byType(Positioned),
+          )
+          .last;
       // Should stay near 230, not snap to edge
       expect(positioned.left, closeTo(230, 5));
     });

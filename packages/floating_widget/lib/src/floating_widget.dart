@@ -215,7 +215,8 @@ class _FloatingWidgetState extends State<FloatingWidget>
     final left = widget.padding.left;
     final top = widget.padding.top;
     final right = screenSize.width - widgetSize.width - widget.padding.right;
-    final bottom = screenSize.height - widgetSize.height - widget.padding.bottom;
+    final bottom =
+        screenSize.height - widgetSize.height - widget.padding.bottom;
     final centerX = (left + right) / 2;
     final centerY = (top + bottom) / 2;
 

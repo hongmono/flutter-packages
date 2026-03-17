@@ -5,20 +5,22 @@ import 'package:flutter/material.dart';
 
 /// Internal data class that holds state for each burst icon animation.
 class _IconData {
-  final GlobalKey key;
   final AnimationController controller;
   final Animation<double> animation;
+  final Animation<double> fadeAnimation;
   final double shake;
   final double amplitude;
 
   const _IconData({
-    required this.key,
     required this.controller,
     required this.animation,
+    required this.fadeAnimation,
     required this.shake,
     required this.amplitude,
   });
 }
+
+final _random = Random();
 
 /// A button widget that creates a burst animation effect when tapped or
 /// long-pressed.
@@ -115,10 +117,9 @@ class _BurstIconButtonState extends State<BurstIconButton>
   double? _iconSizeFactor;
 
   double get iconSizeFactor {
-    return _iconSizeFactor ??= (widget.icon.size ??
-            Theme.of(context).iconTheme.size ??
-            24.0) /
-        (Theme.of(context).iconTheme.size ?? 24.0);
+    return _iconSizeFactor ??=
+        (widget.icon.size ?? Theme.of(context).iconTheme.size ?? 24.0) /
+            (Theme.of(context).iconTheme.size ?? 24.0);
   }
 
   @override
@@ -145,15 +146,11 @@ class _BurstIconButtonState extends State<BurstIconButton>
               final distance = widget.burstDistance ?? 100.0;
               return Transform.translate(
                 offset: Offset(
-                  icon.amplitude *
-                      sin(icon.animation.value * pi * icon.shake),
+                  icon.amplitude * sin(icon.animation.value * pi * icon.shake),
                   -distance * icon.animation.value * iconSizeFactor,
                 ),
                 child: FadeTransition(
-                  opacity: Tween(
-                    begin: 1.0,
-                    end: 0.0,
-                  ).animate(icon.animation),
+                  opacity: icon.fadeAnimation,
                   child: widget.burstIcon ?? widget.icon,
                 ),
               );
@@ -171,13 +168,13 @@ class _BurstIconButtonState extends State<BurstIconButton>
     );
   }
 
-  void _onTapDown(_) {
+  void _onTapDown(TapDownDetails _) {
     setState(() {
       _isPressed = true;
     });
   }
 
-  void _onTapUp(_) {
+  void _onTapUp(TapUpDetails _) {
     setState(() {
       _isPressed = false;
       _spawnBurst();
@@ -192,7 +189,7 @@ class _BurstIconButtonState extends State<BurstIconButton>
     });
   }
 
-  void _onLongPressStart(_) {
+  void _onLongPressStart(LongPressStartDetails _) {
     _timer?.cancel();
     _timer = Timer.periodic(widget.throttleDuration, (_) {
       _spawnBurst();
@@ -203,7 +200,7 @@ class _BurstIconButtonState extends State<BurstIconButton>
     });
   }
 
-  void _onLongPressEnd(_) {
+  void _onLongPressEnd(LongPressEndDetails _) {
     _timer?.cancel();
     _timer = null;
     setState(() {
@@ -221,7 +218,6 @@ class _BurstIconButtonState extends State<BurstIconButton>
   }
 
   void _createIcon() {
-    final key = GlobalKey();
     final controller = AnimationController(
       vsync: this,
       duration: widget.duration,
@@ -231,10 +227,10 @@ class _BurstIconButtonState extends State<BurstIconButton>
       curve: widget.burstCurve ?? Curves.easeOut,
     );
     final icon = _IconData(
-      key: key,
       controller: controller,
       animation: animation,
-      shake: Random().nextDouble() - 0.5,
+      fadeAnimation: Tween(begin: 1.0, end: 0.0).animate(animation),
+      shake: _random.nextDouble() - 0.5,
       amplitude: widget.crossAmplitude ?? 10.0,
     );
     _icons.add(icon);

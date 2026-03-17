@@ -32,8 +32,8 @@ class BurstIconButtonDemo extends StatelessWidget {
                 icon: const Icon(Icons.favorite_border, size: 48),
                 pressedIcon:
                     const Icon(Icons.favorite, size: 48, color: Colors.red),
-                burstIcon: const Icon(Icons.heart_broken,
-                    size: 48, color: Colors.red),
+                burstIcon:
+                    const Icon(Icons.heart_broken, size: 48, color: Colors.red),
                 onPressed: () {},
               ),
             ),
@@ -109,8 +109,7 @@ class BurstIconButtonDemo extends StatelessWidget {
               title: '✨ Sparkle — Small & Bouncy',
               subtitle: 'size: 24, burstCurve: Curves.bounceOut',
               child: BurstIconButton(
-                icon:
-                    const Icon(Icons.auto_awesome_outlined, size: 24),
+                icon: const Icon(Icons.auto_awesome_outlined, size: 24),
                 pressedIcon: const Icon(Icons.auto_awesome,
                     size: 24, color: Colors.yellow),
                 burstIcon: const Icon(Icons.auto_awesome,
@@ -158,8 +157,7 @@ class _DemoSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,

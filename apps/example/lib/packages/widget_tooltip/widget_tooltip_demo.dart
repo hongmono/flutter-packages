@@ -382,8 +382,8 @@ class _DirectionsPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     triangleColor: Colors.orange[700]!,
-                    child: _DirectionButton(
-                        icon: Icons.arrow_back, label: 'Left'),
+                    child:
+                        _DirectionButton(icon: Icons.arrow_back, label: 'Left'),
                   ),
                   const SizedBox(width: 24),
                   WidgetTooltip(
@@ -476,8 +476,7 @@ class _AnimationsPage extends StatelessWidget {
                 message: const Text('No animation'),
                 triggerMode: WidgetTooltipTriggerMode.tap,
                 animation: WidgetTooltipAnimation.none,
-                child:
-                    _AnimationButton(icon: Icons.flash_on, label: 'Instant'),
+                child: _AnimationButton(icon: Icons.flash_on, label: 'Instant'),
               ),
             ),
           ],
@@ -636,8 +635,7 @@ class _FeaturesPage extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.email,
-                              size: 14, color: Colors.grey[600]),
+                          Icon(Icons.email, size: 14, color: Colors.grey[600]),
                           const SizedBox(width: 4),
                           Text('john@example.com',
                               style: TextStyle(
@@ -728,8 +726,8 @@ class _TooltipGroupDemoState extends State<_TooltipGroupDemo> {
           triggerMode: WidgetTooltipTriggerMode.tap,
           messageDecoration: _tooltipDecoration(Colors.blue),
           triangleColor: Colors.blue,
-          child:
-              _FeatureButton(icon: Icons.looks_one, label: 'A', color: Colors.blue),
+          child: _FeatureButton(
+              icon: Icons.looks_one, label: 'A', color: Colors.blue),
         ),
         WidgetTooltip(
           message: const Text('Others auto-dismiss!'),
@@ -951,8 +949,7 @@ class _DirectionButton extends StatelessWidget {
         children: [
           Icon(icon, size: 24),
           const SizedBox(height: 4),
-          Text(label,
-              style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
     );

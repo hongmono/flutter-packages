@@ -220,7 +220,7 @@ class _WidgetTooltipState extends State<WidgetTooltip>
         hint: _triggerMode == WidgetTooltipTriggerMode.longPress
             ? 'Long press to show tooltip'
             : _triggerMode == WidgetTooltipTriggerMode.tap
-                ? 'Double tap to show tooltip'
+                ? 'Tap to show tooltip'
                 : _triggerMode == WidgetTooltipTriggerMode.doubleTap
                     ? 'Double tap to show tooltip'
                     : null,
@@ -316,6 +316,7 @@ class _WidgetTooltipState extends State<WidgetTooltip>
 
       // Announce tooltip content for screen readers
       if (widget.semanticLabel != null) {
+        // ignore: deprecated_member_use, migrate to sendAnnouncement when minimum Flutter version is raised above 3.35
         SemanticsService.announce(
           widget.semanticLabel!,
           TextDirection.ltr,
@@ -368,8 +369,7 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     _overlayEntry = OverlayEntry(
       builder: (_) {
         return TapRegion(
-          onTapInside:
-              _shouldDismissOnTapInside() ? _controller.dismiss : null,
+          onTapInside: _shouldDismissOnTapInside() ? _controller.dismiss : null,
           onTapOutside:
               _shouldDismissOnTapOutside() ? _controller.dismiss : null,
           child: Stack(
@@ -627,8 +627,7 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     final safePadding = MediaQuery.of(context).padding;
 
     // Horizontal overflow adjustment
-    final double overflowWidth =
-        (messageBoxSize.width - targetSize.width) / 2;
+    final double overflowWidth = (messageBoxSize.width - targetSize.width) / 2;
     final edgeFromLeft = targetPosition.dx - overflowWidth;
     final edgeFromRight = screenSize.width -
         (targetPosition.dx + targetSize.width + overflowWidth);
@@ -654,9 +653,7 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     double dy = 0;
     if (edgeFromVertical < widget.padding.vertical / 2) {
       if (isTop) {
-        dy = safePadding.top +
-            (widget.padding.vertical / 2) -
-            edgeFromVertical;
+        dy = safePadding.top + (widget.padding.vertical / 2) - edgeFromVertical;
       } else if (isBottom) {
         dy = safePadding.bottom -
             (widget.padding.vertical / 2) +

@@ -23,7 +23,11 @@ jobs:
       - name: Analyze
         run: dart analyze .
 
-      - name: Test
-        run: |
-          cd packages/widget_tooltip
-          flutter test
+      - name: Test widget_tooltip
+        run: cd packages/widget_tooltip && flutter test
+
+      - name: Test burst_icon_button
+        run: cd packages/burst_icon_button && flutter test
+
+      - name: Test floating_widget
+        run: cd packages/floating_widget && flutter test

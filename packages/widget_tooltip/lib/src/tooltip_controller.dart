@@ -107,7 +107,7 @@ class TooltipGroup {
   }
 
   void _onShow(TooltipController showing) {
-    for (final controller in _controllers) {
+    for (final controller in List.of(_controllers)) {
       if (controller != showing && controller.isShow) {
         controller.dismiss();
       }
@@ -116,7 +116,7 @@ class TooltipGroup {
 
   /// Dismisses all tooltips in this group.
   void dismissAll() {
-    for (final controller in _controllers) {
+    for (final controller in List.of(_controllers)) {
       if (controller.isShow) {
         controller.dismiss();
       }
