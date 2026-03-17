@@ -120,6 +120,22 @@ class BurstIconButtonDemo extends StatelessWidget {
               ),
             ),
 
+            // --- Bolt with limited concurrent bursts ---
+            _DemoSection(
+              title: '🚫 Limited Burst — Max 3',
+              subtitle: 'maxConcurrentBursts: 3, burstCount: 5',
+              child: BurstIconButton(
+                icon: const Icon(Icons.bolt_outlined, size: 32),
+                pressedIcon:
+                    const Icon(Icons.bolt, size: 32, color: Colors.amber),
+                burstIcon:
+                    const Icon(Icons.bolt, size: 32, color: Colors.amber),
+                burstCount: 5,
+                maxConcurrentBursts: 3,
+                onPressed: () {},
+              ),
+            ),
+
             const SizedBox(height: 48),
             Center(
               child: Text(

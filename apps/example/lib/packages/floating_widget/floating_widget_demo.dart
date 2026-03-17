@@ -9,17 +9,19 @@ class FloatingWidgetDemo extends StatefulWidget {
 }
 
 class _FloatingWidgetDemoState extends State<FloatingWidgetDemo> {
-  bool _snapToEdge = false;
+  SnapDirection? _snapDirection;
   Offset _currentPosition = Offset.zero;
   int _selectedWidget = 0;
+  final FloatingWidgetController _controller = FloatingWidgetController();
 
   @override
   Widget build(BuildContext context) {
     return FloatingWidget(
-      key: ValueKey('$_snapToEdge-$_selectedWidget'),
+      key: ValueKey('$_snapDirection-$_selectedWidget'),
       padding: const EdgeInsets.all(16),
       initialAlignment: FloatingAlignment.bottomRight,
-      snapToEdge: _snapToEdge,
+      snapDirection: _snapDirection,
+      controller: _controller,
       onPositionChanged: (offset) {
         setState(() {
           _currentPosition = offset;
@@ -36,9 +38,11 @@ class _FloatingWidgetDemoState extends State<FloatingWidgetDemo> {
           children: [
             _buildInfoCard(),
             const SizedBox(height: 16),
-            _buildSnapToggle(),
+            _buildSnapDirectionSelector(),
             const SizedBox(height: 16),
             _buildWidgetSelector(),
+            const SizedBox(height: 16),
+            _buildMoveToCenter(),
             const SizedBox(height: 16),
             _buildPositionDisplay(),
           ],
@@ -109,17 +113,43 @@ class _FloatingWidgetDemoState extends State<FloatingWidgetDemo> {
     );
   }
 
-  Widget _buildSnapToggle() {
+  Widget _buildSnapDirectionSelector() {
     return Card(
-      child: SwitchListTile(
-        title: const Text('Snap to Edge'),
-        subtitle: const Text('Animate to nearest side when released'),
-        value: _snapToEdge,
-        onChanged: (value) {
-          setState(() {
-            _snapToEdge = value;
-          });
-        },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Snap Direction',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Animate to nearest edge when released',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<SnapDirection?>(
+              segments: const [
+                ButtonSegment(value: null, label: Text('None')),
+                ButtonSegment(
+                    value: SnapDirection.horizontal, label: Text('Horizontal')),
+                ButtonSegment(
+                    value: SnapDirection.vertical, label: Text('Vertical')),
+                ButtonSegment(value: SnapDirection.both, label: Text('Both')),
+              ],
+              selected: {_snapDirection},
+              onSelectionChanged: (value) {
+                setState(() {
+                  _snapDirection = value.first;
+                });
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -173,6 +203,43 @@ class _FloatingWidgetDemoState extends State<FloatingWidgetDemo> {
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontFamily: 'monospace',
                   ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoveToCenter() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Controller',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Move the widget programmatically',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final size = MediaQuery.of(context).size;
+                  _controller.setPosition(
+                    Offset(size.width / 2, size.height / 2),
+                  );
+                },
+                icon: const Icon(Icons.center_focus_strong),
+                label: const Text('Move to Center'),
+              ),
             ),
           ],
         ),

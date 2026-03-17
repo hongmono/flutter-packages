@@ -31,7 +31,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -56,6 +56,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
             Tab(text: 'Animations'),
             Tab(text: 'Features'),
             Tab(text: 'ListView'),
+            Tab(text: 'Timing'),
           ],
         ),
       ),
@@ -68,6 +69,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
           _AnimationsPage(),
           _FeaturesPage(),
           _ListViewPage(),
+          _TimingPage(),
         ],
       ),
     );
@@ -830,6 +832,92 @@ class _ListViewPage extends StatelessWidget {
           itemCount: 15,
         ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Timing Page
+// ============================================================================
+
+class _TimingPage extends StatelessWidget {
+  const _TimingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle('Timing & Size'),
+          const SizedBox(height: 8),
+          Text(
+            'Control show/hide delays and max width',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
+          ),
+          const SizedBox(height: 32),
+          Wrap(
+            spacing: 16,
+            runSpacing: 24,
+            alignment: WrapAlignment.center,
+            children: [
+              _DemoCard(
+                label: 'Show Delay',
+                description: '500ms delay before showing',
+                child: WidgetTooltip(
+                  message: const Text('Appeared after 500ms!'),
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  showDelay: const Duration(milliseconds: 500),
+                  messageDecoration: _tooltipDecoration(Colors.blue),
+                  triangleColor: Colors.blue,
+                  child: _DemoButton(
+                    icon: Icons.hourglass_top,
+                    label: 'Tap me',
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              _DemoCard(
+                label: 'Hide Delay',
+                description: '500ms delay before hiding',
+                child: WidgetTooltip(
+                  message: const Text('Stays a bit longer!'),
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  hideDelay: const Duration(milliseconds: 500),
+                  messageDecoration: _tooltipDecoration(Colors.green),
+                  triangleColor: Colors.green,
+                  child: _DemoButton(
+                    icon: Icons.hourglass_bottom,
+                    label: 'Tap me',
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              _DemoCard(
+                label: 'Max Width',
+                description: 'messageMaxWidth: 150',
+                child: WidgetTooltip(
+                  message: const Text(
+                    'This tooltip has a limited maximum width so the text wraps.',
+                  ),
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  messageMaxWidth: 150,
+                  messageDecoration: _tooltipDecoration(Colors.orange),
+                  triangleColor: Colors.orange,
+                  child: _DemoButton(
+                    icon: Icons.width_normal,
+                    label: 'Tap me',
+                    color: Colors.orange,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
