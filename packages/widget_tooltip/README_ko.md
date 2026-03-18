@@ -78,7 +78,7 @@ Flutter 앱을 위한 고도로 커스터마이징 가능한 툴팁 위젯. 스�
 
 ```yaml
 dependencies:
-  widget_tooltip: ^1.2.2
+  widget_tooltip: ^1.4.0
 ```
 
 ```bash

@@ -1,3 +1,24 @@
+## 1.4.0
+
+### Features
+* **Barrier / Backdrop**: Add `TooltipBarrier` config for semi-transparent overlay with optional gaussian blur effect. Supports touch-through areas for guided tours.
+* **Close Button**: Add `TooltipCloseButton` config with `inside`/`outside` positioning, customizable color and size. Includes accessibility support.
+* **Shadows**: Add `shadows` parameter for adding box shadows without modifying `messageDecoration`.
+* **Decoration Builder**: Add `decorationBuilder` callback for fully custom tooltip decoration.
+* **Separate Animation Durations**: Add `showAnimationDuration` and `hideAnimationDuration` for independent show/hide animation timing.
+* **Mouse Cursor**: Add `mouseCursor` parameter to customize hover cursor style.
+* **onLongPress**: Add `onLongPress` callback for tooltip content long press events.
+
+### Deprecations
+* `touchThroughArea`, `touchThroughAreaShape`, `touchThroughAreaCornerRadius` on `WidgetTooltip` — use `TooltipBarrier.touchThroughArea` instead.
+
+### Improvements
+* Cache `MediaQuery` result in layout calculation to avoid redundant lookups
+* Consolidate dismiss mode checking logic into `_matchesDismissMode` helper
+* Extract `_syncAnimationDurations` helper to eliminate duplication
+* Consolidate `_buildCombinedTooltip` switch branches into unified structure
+* Barrier fades in/out with the tooltip animation
+
 ## 1.3.2
 
 ### Improvements

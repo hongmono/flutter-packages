@@ -78,7 +78,7 @@ Allow touch events to pass through a specific area of the barrier — useful for
 
 ```yaml
 dependencies:
-  widget_tooltip: ^1.2.2
+  widget_tooltip: ^1.4.0
 ```
 
 ```bash
