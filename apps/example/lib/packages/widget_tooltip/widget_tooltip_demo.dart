@@ -1110,7 +1110,7 @@ class _AdvancedPageState extends State<_AdvancedPage> {
               ],
               triangleColor: Colors.white,
               child: _DemoButton(
-                icon: Icons.shadow,
+                icon: Icons.blur_circular,
                 label: 'Shadow',
                 color: Colors.indigo,
               ),
