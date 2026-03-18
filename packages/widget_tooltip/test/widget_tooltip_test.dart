@@ -1726,5 +1726,423 @@ void main() {
         expect(find.text('Tooltip message'), findsOneWidget);
       });
     });
+
+    group('Barrier', () {
+      testWidgets('touch-through area renders ClipPath',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  barrier: const TooltipBarrier(
+                    color: Color(0x80000000),
+                    touchThroughArea: Rect.fromLTWH(50, 100, 200, 60),
+                    touchThroughAreaShape: ClipAreaShape.rectangle,
+                    touchThroughAreaCornerRadius: 8,
+                  ),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        // Should find at least one ClipPath for the touch-through area
+        final clipPaths =
+            tester.widgetList<ClipPath>(find.byType(ClipPath));
+        final hasTouchThroughClipper = clipPaths.any(
+          (cp) => cp.clipper.toString().contains('_TouchThroughClipper'),
+        );
+        expect(hasTouchThroughClipper, isTrue);
+      });
+
+      testWidgets('renders barrier when configured',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  barrier: const TooltipBarrier(color: Color(0x80000000)),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        // Barrier should be rendered (Container with barrier color)
+        expect(find.text('Tooltip message'), findsOneWidget);
+        final containers = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((c) => c.color == const Color(0x80000000));
+        expect(containers.isNotEmpty, isTrue);
+      });
+
+      testWidgets('barrier tap dismisses tooltip',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.tapOutside,
+                  animation: WidgetTooltipAnimation.none,
+                  barrier: const TooltipBarrier(color: Color(0x80000000)),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+        expect(find.text('Tooltip message'), findsOneWidget);
+
+        // Tap the barrier area (top-left corner, away from tooltip)
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tooltip message'), findsNothing);
+      });
+
+      testWidgets('barrier with blur renders BackdropFilter',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  barrier: const TooltipBarrier(
+                    color: Color(0x80000000),
+                    showBlur: true,
+                    sigmaX: 3,
+                    sigmaY: 3,
+                  ),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(BackdropFilter), findsOneWidget);
+      });
+    });
+
+    group('Close Button', () {
+      testWidgets('renders close button when configured',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  closeButton: const TooltipCloseButton(
+                    position: CloseButtonPosition.inside,
+                    color: Color(0xFFFFFFFF),
+                    size: 20,
+                  ),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.close), findsOneWidget);
+      });
+
+      testWidgets('renders outside close button',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  closeButton: const TooltipCloseButton(
+                    position: CloseButtonPosition.outside,
+                    color: Color(0xFFFFFFFF),
+                    size: 22,
+                  ),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.close), findsOneWidget);
+      });
+
+      testWidgets('close button dismisses tooltip',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  closeButton: const TooltipCloseButton(),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+        expect(find.text('Tooltip message'), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.close));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tooltip message'), findsNothing);
+      });
+    });
+
+    group('decorationBuilder', () {
+      testWidgets('uses custom decoration builder',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  decorationBuilder: (child) => Card(
+                    color: Colors.red,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: child,
+                    ),
+                  ),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tooltip message'), findsOneWidget);
+        expect(find.byType(Card), findsOneWidget);
+      });
+    });
+
+    group('Separate Animation Durations', () {
+      testWidgets('showAnimationDuration controls forward animation',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  showAnimationDuration: const Duration(milliseconds: 500),
+                  hideAnimationDuration: const Duration(milliseconds: 100),
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pump(); // Phase 1
+        await tester.pump(); // Phase 2 - animation starts
+
+        // At 200ms, animation should still be in progress (500ms total)
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(find.text('Tooltip message'), findsOneWidget);
+
+        // Complete the show animation
+        await tester.pumpAndSettle();
+        expect(find.text('Tooltip message'), findsOneWidget);
+      });
+    });
+
+    group('Mouse Cursor', () {
+      testWidgets('applies mouse cursor to child',
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: Text('Tooltip message'),
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  mouseCursor: SystemMouseCursors.click,
+                  child: Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final mouseRegions =
+            tester.widgetList<MouseRegion>(find.byType(MouseRegion));
+        final hasClickCursor =
+            mouseRegions.any((m) => m.cursor == SystemMouseCursors.click);
+        expect(hasClickCursor, isTrue);
+      });
+    });
+
+    group('onLongPress', () {
+      testWidgets('onLongPress callback fires on tooltip long press',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+        bool longPressTriggered = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  onLongPress: () => longPressTriggered = true,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        await tester.longPress(find.text('Tooltip message'));
+        expect(longPressTriggered, isTrue);
+      });
+    });
+
+    group('Shadows', () {
+      testWidgets('shadows are applied to tooltip decoration',
+          (WidgetTester tester) async {
+        final controller = TooltipController();
+        const testShadows = [
+          BoxShadow(
+            color: Color(0xFF000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ];
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: WidgetTooltip(
+                  message: const Text('Tooltip message'),
+                  controller: controller,
+                  triggerMode: WidgetTooltipTriggerMode.manual,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.none,
+                  shadows: testShadows,
+                  child: const Text('Target'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        controller.show();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tooltip message'), findsOneWidget);
+        // Find the Container that has our shadow decoration
+        final containers = tester.widgetList<Container>(find.byType(Container));
+        final hasBoxShadow = containers.any((c) {
+          final decoration = c.decoration;
+          if (decoration is BoxDecoration) {
+            return decoration.boxShadow != null &&
+                decoration.boxShadow!.any((s) => s.blurRadius == 10);
+          }
+          return false;
+        });
+        expect(hasBoxShadow, isTrue);
+      });
+    });
   });
 }

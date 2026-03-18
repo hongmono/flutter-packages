@@ -50,6 +50,30 @@ Control tooltip placement with `direction` and `axis`.
 
 Full control over appearance with `messageDecoration`, `triangleColor`, `messagePadding`, and more.
 
+### Barrier / Backdrop
+
+Display a semi-transparent overlay behind the tooltip with optional gaussian blur effect. Great for guided tours and onboarding.
+
+### Close Button
+
+Built-in close button with `inside` or `outside` positioning.
+
+### Shadows
+
+Dedicated `shadows` parameter for adding box shadows without modifying `messageDecoration`.
+
+### Decoration Builder
+
+Use `decorationBuilder` for fully custom tooltip appearance — wrap the message with any widget.
+
+### Separate Animation Durations
+
+Different timing for show and hide animations via `showAnimationDuration` and `hideAnimationDuration`.
+
+### Touch-Through Area
+
+Allow touch events to pass through a specific area of the barrier — useful for guided tours.
+
 ## Installation
 
 ```yaml
@@ -186,6 +210,104 @@ WidgetTooltip(
 
 Available animations: `fade` (default), `scale`, `scaleAndFade`, `none`
 
+### Barrier / Backdrop
+
+```dart
+WidgetTooltip(
+  message: Text('With barrier!'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  barrier: TooltipBarrier(
+    color: Colors.black54,
+    showBlur: true,
+    sigmaX: 3.0,
+    sigmaY: 3.0,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### Close Button
+
+```dart
+WidgetTooltip(
+  message: Text('With close button'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  dismissMode: WidgetTooltipDismissMode.manual,
+  closeButton: TooltipCloseButton(
+    position: CloseButtonPosition.inside,
+    color: Colors.white,
+    size: 18,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### Shadows
+
+```dart
+WidgetTooltip(
+  message: Text('Shadow tooltip'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  messageDecoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(8),
+  ),
+  shadows: [
+    BoxShadow(
+      color: Colors.black26,
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ],
+  child: Icon(Icons.info),
+)
+```
+
+### Decoration Builder
+
+```dart
+WidgetTooltip(
+  message: Text('Custom!'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  decorationBuilder: (child) => Card(
+    elevation: 8,
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: child,
+    ),
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### Separate Animation Durations
+
+```dart
+WidgetTooltip(
+  message: Text('Slow in, fast out'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  showAnimationDuration: Duration(milliseconds: 800),
+  hideAnimationDuration: Duration(milliseconds: 150),
+  child: Icon(Icons.info),
+)
+```
+
+### Touch-Through Area
+
+```dart
+WidgetTooltip(
+  message: Text('Tap the highlighted area!'),
+  triggerMode: WidgetTooltipTriggerMode.manual,
+  barrier: TooltipBarrier(
+    color: Colors.black54,
+    touchThroughArea: Rect.fromLTWH(50, 100, 200, 60),
+    touchThroughAreaShape: ClipAreaShape.rectangle,
+    touchThroughAreaCornerRadius: 8,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
 ## API Reference
 
 ### WidgetTooltip
@@ -212,6 +334,15 @@ Available animations: `fade` (default), `scale`, `scaleAndFade`, `none`
 | `padding` | `EdgeInsetsGeometry` | 16 | Screen edge padding |
 | `onShow` | `VoidCallback?` | null | Called when tooltip shows |
 | `onDismiss` | `VoidCallback?` | null | Called when tooltip hides |
+| `barrier` | `TooltipBarrier?` | null | Barrier/backdrop configuration |
+| `closeButton` | `TooltipCloseButton?` | null | Close button configuration |
+| `shadows` | `List<BoxShadow>?` | null | Tooltip box shadows |
+| `decorationBuilder` | `Function?` | null | Custom decoration builder |
+| `showAnimationDuration` | `Duration?` | null | Show animation duration override |
+| `hideAnimationDuration` | `Duration?` | null | Hide animation duration override |
+| `mouseCursor` | `MouseCursor?` | null | Cursor style on hover |
+| `onLongPress` | `VoidCallback?` | null | Long press on tooltip content |
+| ~~`touchThroughArea`~~ | `Rect?` | null | Deprecated: use `TooltipBarrier.touchThroughArea` |
 
 ### TooltipController
 

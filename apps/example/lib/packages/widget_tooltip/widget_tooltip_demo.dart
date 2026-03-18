@@ -31,7 +31,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -57,6 +57,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
             Tab(text: 'Features'),
             Tab(text: 'ListView'),
             Tab(text: 'Timing'),
+            Tab(text: 'Advanced'),
           ],
         ),
       ),
@@ -70,6 +71,7 @@ class _WidgetTooltipDemoState extends State<WidgetTooltipDemo>
           _FeaturesPage(),
           _ListViewPage(),
           _TimingPage(),
+          _AdvancedPage(),
         ],
       ),
     );
@@ -918,6 +920,273 @@ class _TimingPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ============================================================================
+// Advanced Features Page
+// ============================================================================
+
+class _AdvancedPage extends StatefulWidget {
+  const _AdvancedPage();
+
+  @override
+  State<_AdvancedPage> createState() => _AdvancedPageState();
+}
+
+class _AdvancedPageState extends State<_AdvancedPage> {
+  final _barrierController = TooltipController();
+  final _blurController = TooltipController();
+  final _closeInsideController = TooltipController();
+  final _closeOutsideController = TooltipController();
+  final _shadowController = TooltipController();
+  final _decorationController = TooltipController();
+
+  @override
+  void dispose() {
+    _barrierController.dispose();
+    _blurController.dispose();
+    _closeInsideController.dispose();
+    _closeOutsideController.dispose();
+    _shadowController.dispose();
+    _decorationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        _SectionTitle('Advanced Features'),
+        const SizedBox(height: 8),
+        Text(
+          'Barrier, close button, shadows, and more',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+        ),
+        const SizedBox(height: 32),
+
+        // Barrier
+        _FeatureSection(
+          title: 'Barrier / Backdrop',
+          description: 'Semi-transparent overlay behind the tooltip',
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            alignment: WrapAlignment.center,
+            children: [
+              _DemoCard(
+                label: 'Color Barrier',
+                child: WidgetTooltip(
+                  message: const Text('With barrier!'),
+                  controller: _barrierController,
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  dismissMode: WidgetTooltipDismissMode.tapOutside,
+                  animation: WidgetTooltipAnimation.fade,
+                  barrier: const TooltipBarrier(color: Color(0x80000000)),
+                  messageDecoration: _tooltipDecoration(Colors.blue),
+                  triangleColor: Colors.blue,
+                  child: _DemoButton(
+                    icon: Icons.layers,
+                    label: 'Barrier',
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              _DemoCard(
+                label: 'Blur Barrier',
+                child: WidgetTooltip(
+                  message: const Text('Blurred background!'),
+                  controller: _blurController,
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  dismissMode: WidgetTooltipDismissMode.tapOutside,
+                  animation: WidgetTooltipAnimation.fade,
+                  barrier: const TooltipBarrier(
+                    color: Color(0x40000000),
+                    showBlur: true,
+                    sigmaX: 3,
+                    sigmaY: 3,
+                  ),
+                  messageDecoration: _tooltipDecoration(Colors.purple),
+                  triangleColor: Colors.purple,
+                  child: _DemoButton(
+                    icon: Icons.blur_on,
+                    label: 'Blur',
+                    color: Colors.purple,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const Divider(height: 48),
+
+        // Close Button
+        _FeatureSection(
+          title: 'Close Button',
+          description: 'Built-in close button (inside or outside)',
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            alignment: WrapAlignment.center,
+            children: [
+              _DemoCard(
+                label: 'Inside',
+                child: WidgetTooltip(
+                  message: const Padding(
+                    padding: EdgeInsets.only(right: 20),
+                    child: Text('Close button inside'),
+                  ),
+                  controller: _closeInsideController,
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.fade,
+                  closeButton: const TooltipCloseButton(
+                    position: CloseButtonPosition.inside,
+                    color: Colors.white70,
+                  ),
+                  messageDecoration: _tooltipDecoration(Colors.teal),
+                  triangleColor: Colors.teal,
+                  child: _DemoButton(
+                    icon: Icons.close,
+                    label: 'Inside',
+                    color: Colors.teal,
+                  ),
+                ),
+              ),
+              _DemoCard(
+                label: 'Outside',
+                child: WidgetTooltip(
+                  message: const Text('Close button outside'),
+                  controller: _closeOutsideController,
+                  triggerMode: WidgetTooltipTriggerMode.tap,
+                  dismissMode: WidgetTooltipDismissMode.manual,
+                  animation: WidgetTooltipAnimation.fade,
+                  closeButton: const TooltipCloseButton(
+                    position: CloseButtonPosition.outside,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  messageDecoration: _tooltipDecoration(Colors.orange),
+                  triangleColor: Colors.orange,
+                  child: _DemoButton(
+                    icon: Icons.close_fullscreen,
+                    label: 'Outside',
+                    color: Colors.orange,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const Divider(height: 48),
+
+        // Shadows
+        _FeatureSection(
+          title: 'Shadows',
+          description: 'Dedicated shadow API',
+          child: Center(
+            child: WidgetTooltip(
+              message: const Text('With custom shadow!'),
+              controller: _shadowController,
+              triggerMode: WidgetTooltipTriggerMode.tap,
+              animation: WidgetTooltipAnimation.fade,
+              messageDecoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              shadows: [
+                BoxShadow(
+                  color: Colors.indigo.withValues(alpha: 0.4),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              triangleColor: Colors.white,
+              child: _DemoButton(
+                icon: Icons.shadow,
+                label: 'Shadow',
+                color: Colors.indigo,
+              ),
+            ),
+          ),
+        ),
+
+        const Divider(height: 48),
+
+        // Decoration Builder
+        _FeatureSection(
+          title: 'Decoration Builder',
+          description: 'Fully custom tooltip appearance',
+          child: Center(
+            child: WidgetTooltip(
+              message: const Text(
+                'Custom Card!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              controller: _decorationController,
+              triggerMode: WidgetTooltipTriggerMode.tap,
+              animation: WidgetTooltipAnimation.scaleAndFade,
+              decorationBuilder: (child) => Card(
+                elevation: 8,
+                color: Colors.amber[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.amber[300]!),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, color: Colors.amber[700], size: 20),
+                      const SizedBox(width: 8),
+                      child,
+                    ],
+                  ),
+                ),
+              ),
+              triangleColor: Colors.amber[300]!,
+              child: _DemoButton(
+                icon: Icons.palette,
+                label: 'Custom',
+                color: Colors.amber[700]!,
+              ),
+            ),
+          ),
+        ),
+
+        const Divider(height: 48),
+
+        // Separate Animation Durations
+        _FeatureSection(
+          title: 'Separate Animation Durations',
+          description: 'Different speed for show (slow) and hide (fast)',
+          child: Center(
+            child: WidgetTooltip(
+              message: const Text('Slow in, fast out!'),
+              triggerMode: WidgetTooltipTriggerMode.tap,
+              showAnimationDuration: const Duration(milliseconds: 800),
+              hideAnimationDuration: const Duration(milliseconds: 150),
+              messageDecoration: _tooltipDecoration(Colors.green),
+              triangleColor: Colors.green,
+              child: _DemoButton(
+                icon: Icons.speed,
+                label: 'Timing',
+                color: Colors.green,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 48),
+      ],
     );
   }
 }

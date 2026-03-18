@@ -50,6 +50,30 @@ Flutter 앱을 위한 고도로 커스터마이징 가능한 툴팁 위젯. 스�
 
 `messageDecoration`, `triangleColor`, `messagePadding` 등으로 외관을 완전히 제어할 수 있습니다.
 
+### 배리어 / 백드롭
+
+툴팁 뒤에 반투명 오버레이를 표시하고 선택적으로 가우시안 블러 효과를 적용합니다. 가이드 투어, 온보딩에 유용합니다.
+
+### 닫기 버튼
+
+`inside` 또는 `outside` 위치에 닫기 버튼을 표시합니다.
+
+### 그림자
+
+`messageDecoration`을 수정하지 않고 `shadows` 파라미터로 박스 그림자를 추가합니다.
+
+### 데코레이션 빌더
+
+`decorationBuilder`로 툴팁의 외관을 완전히 커스터마이징할 수 있습니다.
+
+### 개별 애니메이션 Duration
+
+`showAnimationDuration`과 `hideAnimationDuration`으로 표시/숨기기 애니메이션의 속도를 각각 설정합니다.
+
+### 터치 통과 영역
+
+배리어의 특정 영역에서 터치 이벤트를 통과시킵니다. 가이드 투어에서 유용합니다.
+
 ## 설치
 
 ```yaml
@@ -186,6 +210,104 @@ WidgetTooltip(
 
 사용 가능한 애니메이션: `fade` (기본값), `scale`, `scaleAndFade`, `none`
 
+### 배리어 / 백드롭
+
+```dart
+WidgetTooltip(
+  message: Text('배리어와 함께!'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  barrier: TooltipBarrier(
+    color: Colors.black54,
+    showBlur: true,
+    sigmaX: 3.0,
+    sigmaY: 3.0,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### 닫기 버튼
+
+```dart
+WidgetTooltip(
+  message: Text('닫기 버튼 포함'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  dismissMode: WidgetTooltipDismissMode.manual,
+  closeButton: TooltipCloseButton(
+    position: CloseButtonPosition.inside,
+    color: Colors.white,
+    size: 18,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### 그림자
+
+```dart
+WidgetTooltip(
+  message: Text('그림자 툴팁'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  messageDecoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(8),
+  ),
+  shadows: [
+    BoxShadow(
+      color: Colors.black26,
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ],
+  child: Icon(Icons.info),
+)
+```
+
+### 데코레이션 빌더
+
+```dart
+WidgetTooltip(
+  message: Text('커스텀!'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  decorationBuilder: (child) => Card(
+    elevation: 8,
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: child,
+    ),
+  ),
+  child: Icon(Icons.info),
+)
+```
+
+### 개별 애니메이션 Duration
+
+```dart
+WidgetTooltip(
+  message: Text('천천히 나타나고, 빠르게 사라짐'),
+  triggerMode: WidgetTooltipTriggerMode.tap,
+  showAnimationDuration: Duration(milliseconds: 800),
+  hideAnimationDuration: Duration(milliseconds: 150),
+  child: Icon(Icons.info),
+)
+```
+
+### 터치 통과 영역
+
+```dart
+WidgetTooltip(
+  message: Text('하이라이트 영역을 탭하세요!'),
+  triggerMode: WidgetTooltipTriggerMode.manual,
+  barrier: TooltipBarrier(
+    color: Colors.black54,
+    touchThroughArea: Rect.fromLTWH(50, 100, 200, 60),
+    touchThroughAreaShape: ClipAreaShape.rectangle,
+    touchThroughAreaCornerRadius: 8,
+  ),
+  child: Icon(Icons.info),
+)
+```
+
 ## API 레퍼런스
 
 ### WidgetTooltip
@@ -212,6 +334,15 @@ WidgetTooltip(
 | `padding` | `EdgeInsetsGeometry` | 16 | 화면 가장자리 패딩 |
 | `onShow` | `VoidCallback?` | null | 툴팁 표시 시 콜백 |
 | `onDismiss` | `VoidCallback?` | null | 툴팁 숨김 시 콜백 |
+| `barrier` | `TooltipBarrier?` | null | 배리어/백드롭 설정 |
+| `closeButton` | `TooltipCloseButton?` | null | 닫기 버튼 설정 |
+| `shadows` | `List<BoxShadow>?` | null | 툴팁 박스 그림자 |
+| `decorationBuilder` | `Function?` | null | 커스텀 데코레이션 빌더 |
+| `showAnimationDuration` | `Duration?` | null | 표시 애니메이션 시간 |
+| `hideAnimationDuration` | `Duration?` | null | 숨기기 애니메이션 시간 |
+| `mouseCursor` | `MouseCursor?` | null | 호버 시 커서 스타일 |
+| `onLongPress` | `VoidCallback?` | null | 툴팁 콘텐츠 롱프레스 콜백 |
+| ~~`touchThroughArea`~~ | `Rect?` | null | Deprecated: `TooltipBarrier.touchThroughArea` 사용 |
 
 ### TooltipController
 

@@ -6,10 +6,14 @@ import 'package:flutter/semantics.dart';
 
 import 'enums.dart';
 import 'tooltip_animation_builder.dart';
+import 'tooltip_barrier.dart';
+import 'tooltip_close_button.dart';
 import 'tooltip_controller.dart';
 import 'triangles/tooltip_triangle.dart';
 
 export 'enums.dart';
+export 'tooltip_barrier.dart' show TooltipBarrier, ClipAreaShape;
+export 'tooltip_close_button.dart' show TooltipCloseButton, CloseButtonPosition;
 export 'tooltip_controller.dart';
 
 /// A highly customizable tooltip widget that displays a message when triggered.
@@ -49,6 +53,20 @@ class WidgetTooltip extends StatefulWidget {
     this.showDelay,
     this.hideDelay,
     this.messageMaxWidth,
+    this.barrier,
+    this.closeButton,
+    @Deprecated('Use TooltipBarrier.touchThroughArea instead')
+    this.touchThroughArea,
+    @Deprecated('Use TooltipBarrier.touchThroughAreaShape instead')
+    this.touchThroughAreaShape = ClipAreaShape.rectangle,
+    @Deprecated('Use TooltipBarrier.touchThroughAreaCornerRadius instead')
+    this.touchThroughAreaCornerRadius = 0,
+    this.decorationBuilder,
+    this.showAnimationDuration,
+    this.hideAnimationDuration,
+    this.mouseCursor,
+    this.onLongPress,
+    this.shadows,
   }) : assert(messageMaxWidth == null || messageMaxWidth > 0);
 
   final Widget message;
@@ -108,6 +126,74 @@ class WidgetTooltip extends StatefulWidget {
   /// (uses screen width minus padding).
   final double? messageMaxWidth;
 
+  /// Configuration for the background barrier overlay.
+  ///
+  /// When provided, a full-screen overlay is rendered behind the tooltip.
+  /// Supports color tint and optional gaussian blur effect.
+  /// Useful for guided tours and onboarding flows.
+  final TooltipBarrier? barrier;
+
+  /// Configuration for a close button on the tooltip.
+  ///
+  /// When provided, renders a close button that dismisses the tooltip.
+  /// Can be positioned inside or outside the tooltip bubble.
+  final TooltipCloseButton? closeButton;
+
+  /// An area that allows touch events to pass through the barrier.
+  ///
+  /// Deprecated: Use [TooltipBarrier.touchThroughArea] instead.
+  @Deprecated('Use TooltipBarrier.touchThroughArea instead')
+  final Rect? touchThroughArea;
+
+  /// The shape of the [touchThroughArea].
+  ///
+  /// Deprecated: Use [TooltipBarrier.touchThroughAreaShape] instead.
+  @Deprecated('Use TooltipBarrier.touchThroughAreaShape instead')
+  final ClipAreaShape touchThroughAreaShape;
+
+  /// The corner radius of the [touchThroughArea].
+  ///
+  /// Deprecated: Use [TooltipBarrier.touchThroughAreaCornerRadius] instead.
+  @Deprecated('Use TooltipBarrier.touchThroughAreaCornerRadius instead')
+  final double touchThroughAreaCornerRadius;
+
+  /// A builder that wraps the tooltip content with a custom decoration.
+  ///
+  /// When provided, this builder is used instead of the default [Container]
+  /// with [messageDecoration] and [messagePadding]. The builder receives
+  /// the [message] widget and should return the decorated version.
+  final Widget Function(Widget child)? decorationBuilder;
+
+  /// The duration for the show animation.
+  ///
+  /// When set, overrides [animationDuration] for the show direction only.
+  /// The hide animation uses [hideAnimationDuration] or [animationDuration].
+  final Duration? showAnimationDuration;
+
+  /// The duration for the hide animation.
+  ///
+  /// When set, overrides [animationDuration] for the hide direction only.
+  /// The show animation uses [showAnimationDuration] or [animationDuration].
+  final Duration? hideAnimationDuration;
+
+  /// The mouse cursor to use when hovering over the child widget.
+  ///
+  /// Only effective on platforms that support mouse input.
+  final MouseCursor? mouseCursor;
+
+  /// Called when the tooltip content is long-pressed.
+  final VoidCallback? onLongPress;
+
+  /// Box shadows applied to the tooltip message container.
+  ///
+  /// When provided, these shadows are added to the tooltip decoration.
+  /// This is a convenience alternative to setting boxShadow in
+  /// [messageDecoration] directly.
+  ///
+  /// Has no effect when [decorationBuilder] is used, since the builder
+  /// is responsible for its own decoration.
+  final List<BoxShadow>? shadows;
+
   @override
   State<WidgetTooltip> createState() => _WidgetTooltipState();
 }
@@ -133,10 +219,8 @@ class _WidgetTooltipState extends State<WidgetTooltip>
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: widget.animationDuration,
-    );
+    _animationController = AnimationController(vsync: this);
+    _syncAnimationDurations();
     _animation =
         CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
 
@@ -160,8 +244,10 @@ class _WidgetTooltipState extends State<WidgetTooltip>
   void didUpdateWidget(covariant WidgetTooltip oldWidget) {
     super.didUpdateWidget(oldWidget);
     _initProperties();
-    if (oldWidget.animationDuration != widget.animationDuration) {
-      _animationController.duration = widget.animationDuration;
+    if (oldWidget.animationDuration != widget.animationDuration ||
+        oldWidget.showAnimationDuration != widget.showAnimationDuration ||
+        oldWidget.hideAnimationDuration != widget.hideAnimationDuration) {
+      _syncAnimationDurations();
     }
     if (oldWidget.dismissOnScroll != widget.dismissOnScroll) {
       _removeScrollListener();
@@ -228,6 +314,13 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     }
   }
 
+  void _syncAnimationDurations() {
+    _animationController.duration =
+        widget.showAnimationDuration ?? widget.animationDuration;
+    _animationController.reverseDuration =
+        widget.hideAnimationDuration ?? widget.animationDuration;
+  }
+
   void _initProperties() {
     _triggerMode = widget.controller == null
         ? widget.triggerMode ?? WidgetTooltipTriggerMode.longPress
@@ -258,8 +351,14 @@ class _WidgetTooltipState extends State<WidgetTooltip>
 
     if (_triggerMode == WidgetTooltipTriggerMode.hover) {
       child = MouseRegion(
+        cursor: widget.mouseCursor ?? MouseCursor.defer,
         onEnter: (_) => _controller.show(),
         onExit: (_) => _controller.dismiss(),
+        child: child,
+      );
+    } else if (widget.mouseCursor != null) {
+      child = MouseRegion(
+        cursor: widget.mouseCursor!,
         child: child,
       );
     }
@@ -313,18 +412,35 @@ class _WidgetTooltipState extends State<WidgetTooltip>
         ? min(widget.messageMaxWidth!, screenMaxWidth)
         : screenMaxWidth;
 
+    // Build effective decoration with shadows merged in
+    final effectiveDecoration = widget.shadows != null
+        ? widget.messageDecoration.copyWith(
+            boxShadow: [
+              ...?widget.messageDecoration.boxShadow,
+              ...widget.shadows!,
+            ],
+          )
+        : widget.messageDecoration;
+
+    final Widget messageContent = widget.decorationBuilder != null
+        ? KeyedSubtree(
+            key: _messageBoxKey,
+            child: widget.decorationBuilder!(widget.message),
+          )
+        : Container(
+            key: _messageBoxKey,
+            padding: widget.messagePadding,
+            decoration: effectiveDecoration,
+            child: widget.message,
+          );
+
     final Widget messageBox = Material(
       type: MaterialType.transparency,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: effectiveMaxWidth,
         ),
-        child: Container(
-          key: _messageBoxKey,
-          padding: widget.messagePadding,
-          decoration: widget.messageDecoration,
-          child: widget.message,
-        ),
+        child: messageContent,
       ),
     );
 
@@ -425,28 +541,63 @@ class _WidgetTooltipState extends State<WidgetTooltip>
 
     _overlayEntry = OverlayEntry(
       builder: (_) {
+        Widget tooltipContent = combined.widget;
+
+        // Wrap with close button if configured
+        if (widget.closeButton != null) {
+          tooltipContent = _buildWithCloseButton(
+            child: tooltipContent,
+            config: widget.closeButton!,
+          );
+        }
+
+        // Wrap with onLongPress if configured
+        if (widget.onLongPress != null) {
+          tooltipContent = GestureDetector(
+            onLongPress: widget.onLongPress,
+            child: tooltipContent,
+          );
+        }
+
+        tooltipContent = animationBuilder.build(
+          scaleAlignment: scaleAlignment,
+          child: widget.semanticLabel != null
+              ? Semantics(
+                  liveRegion: true,
+                  label: widget.semanticLabel,
+                  child: tooltipContent,
+                )
+              : tooltipContent,
+        );
+
         return TapRegion(
           onTapInside: _shouldDismissOnTapInside() ? _controller.dismiss : null,
-          onTapOutside:
-              _shouldDismissOnTapOutside() ? _controller.dismiss : null,
+          onTapOutside: widget.barrier == null && _shouldDismissOnTapOutside()
+              ? _controller.dismiss
+              : null,
           child: Stack(
             children: [
-              const SizedBox.expand(),
+              // Barrier
+              if (widget.barrier != null)
+                Positioned.fill(
+                  child: FadeTransition(
+                    opacity: _animation,
+                    child: TooltipBarrierWidget(
+                      config: _effectiveBarrier(),
+                      onTap: _shouldDismissOnTapOutside()
+                          ? () => _controller.dismiss()
+                          : null,
+                    ),
+                  ),
+                )
+              else
+                const SizedBox.expand(),
               CompositedTransformFollower(
                 link: _layerLink,
                 targetAnchor: layout.targetAnchor,
                 followerAnchor: layout.followerAnchor,
                 offset: combined.offset,
-                child: animationBuilder.build(
-                  scaleAlignment: scaleAlignment,
-                  child: widget.semanticLabel != null
-                      ? Semantics(
-                          liveRegion: true,
-                          label: widget.semanticLabel,
-                          child: combined.widget,
-                        )
-                      : combined.widget,
-                ),
+                child: tooltipContent,
               ),
             ],
           ),
@@ -467,78 +618,99 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     final dx = layout.dx;
     final dy = layout.dy;
     final ts = triangleSize;
+    final isVertical = layout.targetAnchor == Alignment.bottomCenter ||
+        layout.targetAnchor == Alignment.topCenter;
 
-    return switch (layout.targetAnchor) {
+    if (!isVertical &&
+        layout.targetAnchor != Alignment.centerRight &&
+        layout.targetAnchor != Alignment.centerLeft) {
+      return (widget: messageBox, offset: Offset.zero);
+    }
+
+    // Triangle position along the cross-axis
+    final double triangleCrossPos = isVertical
+        ? messageBoxSize.width / 2 - dx - ts.width / 2
+        : messageBoxSize.height / 2 - dy - ts.height / 2;
+
+    // Determine padding and positioning based on direction
+    final ({EdgeInsets padding, Map<String, double?> position, Offset offset})
+        dirConfig = switch (layout.targetAnchor) {
       Alignment.bottomCenter => (
-          widget: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: ts.height - 1),
-                child: messageBox,
-              ),
-              Positioned(
-                top: 0,
-                left: messageBoxSize.width / 2 - dx - ts.width / 2,
-                child: triangle,
-              ),
-            ],
-          ),
+          padding: EdgeInsets.only(top: ts.height - 1),
+          position: {'top': 0.0, 'left': triangleCrossPos},
           offset: Offset(dx, widget.targetPadding),
         ),
       Alignment.topCenter => (
-          widget: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: ts.height - 1),
-                child: messageBox,
-              ),
-              Positioned(
-                bottom: 0,
-                left: messageBoxSize.width / 2 - dx - ts.width / 2,
-                child: triangle,
-              ),
-            ],
-          ),
+          padding: EdgeInsets.only(bottom: ts.height - 1),
+          position: {'bottom': 0.0, 'left': triangleCrossPos},
           offset: Offset(dx, -widget.targetPadding),
         ),
       Alignment.centerRight => (
-          widget: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: ts.width - 1),
-                child: messageBox,
-              ),
-              Positioned(
-                left: 0,
-                top: messageBoxSize.height / 2 - dy - ts.height / 2,
-                child: triangle,
-              ),
-            ],
-          ),
+          padding: EdgeInsets.only(left: ts.width - 1),
+          position: {'left': 0.0, 'top': triangleCrossPos},
           offset: Offset(widget.targetPadding, dy),
         ),
       Alignment.centerLeft => (
-          widget: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(right: ts.width - 1),
-                child: messageBox,
-              ),
-              Positioned(
-                right: 0,
-                top: messageBoxSize.height / 2 - dy - ts.height / 2,
-                child: triangle,
-              ),
-            ],
-          ),
+          padding: EdgeInsets.only(right: ts.width - 1),
+          position: {'right': 0.0, 'top': triangleCrossPos},
           offset: Offset(-widget.targetPadding, dy),
         ),
-      _ => (widget: messageBox, offset: Offset.zero),
+      _ => throw StateError('Unreachable'),
     };
+
+    return (
+      widget: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Padding(padding: dirConfig.padding, child: messageBox),
+          Positioned(
+            top: dirConfig.position['top'],
+            bottom: dirConfig.position['bottom'],
+            left: dirConfig.position['left'],
+            right: dirConfig.position['right'],
+            child: triangle,
+          ),
+        ],
+      ),
+      offset: dirConfig.offset,
+    );
+  }
+
+  Widget _buildWithCloseButton({
+    required Widget child,
+    required TooltipCloseButton config,
+  }) {
+    final isOutside = config.position == CloseButtonPosition.outside;
+    final halfSize = config.size / 2;
+
+    final closeIcon = Semantics(
+      button: true,
+      label: 'Close tooltip',
+      child: GestureDetector(
+        onTap: () => _controller.dismiss(),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(
+            Icons.close,
+            size: config.size,
+            color: config.color,
+          ),
+        ),
+      ),
+    );
+
+    return Stack(
+      clipBehavior: isOutside ? Clip.none : Clip.hardEdge,
+      children: [
+        child,
+        Positioned(
+          top: isOutside ? -halfSize : 4,
+          right: isOutside ? -halfSize : 4,
+          child: closeIcon,
+        ),
+      ],
+    );
   }
 
   Future<void> _dismiss() async {
@@ -577,14 +749,25 @@ class _WidgetTooltipState extends State<WidgetTooltip>
         _targetKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return null;
 
+    final mediaQuery = MediaQuery.of(context);
+    final screenSize = mediaQuery.size;
+    final safePadding = mediaQuery.padding;
+
     final targetSize = renderBox.size;
     final targetPosition = renderBox.localToGlobal(Offset.zero);
 
-    final anchors = _resolveAnchors(targetPosition, targetSize, textDirection);
+    final anchors = _resolveAnchors(
+      targetPosition: targetPosition,
+      targetSize: targetSize,
+      textDirection: textDirection,
+      screenSize: screenSize,
+    );
     final offsets = _resolveOffsets(
       messageBoxSize: messageBoxSize,
       targetSize: targetSize,
       targetPosition: targetPosition,
+      screenSize: screenSize,
+      safePadding: safePadding,
       isTop: anchors.isTop,
       isBottom: anchors.isBottom,
       isLeft: anchors.isLeft,
@@ -606,20 +789,19 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     bool isBottom,
     bool isLeft,
     bool isRight,
-  }) _resolveAnchors(
-    Offset targetPosition,
-    Size targetSize,
-    TextDirection textDirection,
-  ) {
+  }) _resolveAnchors({
+    required Offset targetPosition,
+    required Size targetSize,
+    required TextDirection textDirection,
+    required Size screenSize,
+  }) {
     final targetCenter = Offset(
       targetPosition.dx + targetSize.width / 2,
       targetPosition.dy + targetSize.height / 2,
     );
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final bool isRtl = textDirection == TextDirection.rtl;
-    final bool inLeftHalf = targetCenter.dx <= screenWidth / 2;
+    final bool inLeftHalf = targetCenter.dx <= screenSize.width / 2;
 
     final bool isLeft = switch (widget.direction) {
       WidgetTooltipDirection.left => false,
@@ -636,13 +818,15 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     final bool isBottom = switch (widget.direction) {
       WidgetTooltipDirection.top => true,
       WidgetTooltipDirection.bottom => false,
-      _ => widget.autoFlip ? targetCenter.dy > screenHeight / 2 : false,
+      _ =>
+        widget.autoFlip ? targetCenter.dy > screenSize.height / 2 : false,
     };
 
     final bool isTop = switch (widget.direction) {
       WidgetTooltipDirection.top => false,
       WidgetTooltipDirection.bottom => true,
-      _ => widget.autoFlip ? targetCenter.dy <= screenHeight / 2 : true,
+      _ =>
+        widget.autoFlip ? targetCenter.dy <= screenSize.height / 2 : true,
     };
 
     final Alignment targetAnchor = switch (widget.axis) {
@@ -675,14 +859,13 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     required Size messageBoxSize,
     required Size targetSize,
     required Offset targetPosition,
+    required Size screenSize,
+    required EdgeInsets safePadding,
     required bool isTop,
     required bool isBottom,
     required bool isLeft,
     required bool isRight,
   }) {
-    final screenSize = MediaQuery.of(context).size;
-    final safePadding = MediaQuery.of(context).padding;
-
     // Horizontal overflow adjustment
     final double overflowWidth = (messageBoxSize.width - targetSize.width) / 2;
     final edgeFromLeft = targetPosition.dx - overflowWidth;
@@ -735,15 +918,37 @@ class _WidgetTooltipState extends State<WidgetTooltip>
     };
   }
 
-  bool _shouldDismissOnTapInside() {
-    return _dismissMode == WidgetTooltipDismissMode.tapInside ||
-        _dismissMode == WidgetTooltipDismissMode.tapAnywhere ||
-        // ignore: deprecated_member_use_from_same_package
-        _dismissMode == WidgetTooltipDismissMode.tapAnyWhere;
+  /// Resolves the effective barrier config, merging deprecated top-level
+  /// touchThrough params into the barrier config if needed.
+  TooltipBarrier _effectiveBarrier() {
+    final barrier = widget.barrier!;
+    // If barrier already has touchThrough config, use it directly
+    if (barrier.touchThroughArea != null) return barrier;
+    // Fall back to deprecated top-level params
+    // ignore: deprecated_member_use_from_same_package
+    final legacyArea = widget.touchThroughArea;
+    if (legacyArea == null) return barrier;
+    return TooltipBarrier(
+      color: barrier.color,
+      showBlur: barrier.showBlur,
+      sigmaX: barrier.sigmaX,
+      sigmaY: barrier.sigmaY,
+      touchThroughArea: legacyArea,
+      // ignore: deprecated_member_use_from_same_package
+      touchThroughAreaShape: widget.touchThroughAreaShape,
+      // ignore: deprecated_member_use_from_same_package
+      touchThroughAreaCornerRadius: widget.touchThroughAreaCornerRadius,
+    );
   }
 
-  bool _shouldDismissOnTapOutside() {
-    return _dismissMode == WidgetTooltipDismissMode.tapOutside ||
+  bool _shouldDismissOnTapInside() =>
+      _matchesDismissMode(WidgetTooltipDismissMode.tapInside);
+
+  bool _shouldDismissOnTapOutside() =>
+      _matchesDismissMode(WidgetTooltipDismissMode.tapOutside);
+
+  bool _matchesDismissMode(WidgetTooltipDismissMode mode) {
+    return _dismissMode == mode ||
         _dismissMode == WidgetTooltipDismissMode.tapAnywhere ||
         // ignore: deprecated_member_use_from_same_package
         _dismissMode == WidgetTooltipDismissMode.tapAnyWhere;
