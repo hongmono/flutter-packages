@@ -1,3 +1,8 @@
+## 0.2.3
+
+### Improvements
+* Add example/main.dart for pub.dev example tab
+
 ## 0.2.2
 
 ### Improvements

@@ -1,3 +1,8 @@
+## 1.4.1
+
+### Improvements
+* Add example/main.dart for pub.dev example tab
+
 ## 1.4.0
 
 ### Features
